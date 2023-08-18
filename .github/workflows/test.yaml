@@ -1,0 +1,28 @@
+---
+on: push
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install latest podman from Kubic repos
+        run: |
+          echo 'deb http://download.opensuse.org/repositories/devel:/kubic:/libcontainers:/unstable/xUbuntu_22.04/ /' | sudo tee /etc/apt/sources.list.d/devel:kubic:libcontainers:unstable.list
+          curl -fsSL https://download.opensuse.org/repositories/devel:kubic:libcontainers:unstable/xUbuntu_22.04/Release.key | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/devel_kubic_libcontainers_unstable.gpg > /dev/null
+          sudo apt update
+          sudo apt install podman
+      - name: Show podman info
+        run: podman info
+      - name: Test podman
+        run: podman run -it --rm alpine hostname
+      - name: Install minikube
+        run: |
+          curl -LO https://storage.googleapis.com/minikube/releases/latest/minikube-linux-amd64
+          sudo install minikube-linux-amd64 /usr/local/bin/minikube
+          minikube version
+      - name: Start cluster
+        run: minikube start --profile test --driver podman --container-runtime cri-o
+      - name: Profile list
+        run: minikube profile list
+      - name: Delete cluster
+        run: minikube delete --profile test
